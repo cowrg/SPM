@@ -6,11 +6,12 @@
 #define EOS -1
 
 SafeQueue<int> producerQueue;
+SafeQueue<int> outputQueue;
 
 void producer(int numTask){
     for(int i=0;i<numTask;i++){
-        //int tmp = rand()%10000+1;
-        int tmp = 17 ;
+        int tmp = rand()%10000+1;
+        //int tmp = 22 ;
         producerQueue.safe_push(tmp);
     }
 
@@ -18,27 +19,24 @@ void producer(int numTask){
 }
 
 bool isPrime(int x){
-
     if(x == 2)
         return true;
-
-    if(x % 2 == 0)
-        return false;
+    if(x % 2 == 0 || x == 1){
+        return false;}
 
     int i = 2;
     int sqR =sqrt(x);
 
     while(i <= sqR){
-        if(x % i == 0)
+        if(x % i == 0){
             return false;
+        }
         i++;
     }
-    
     return true;
 }
 
 void computePrime(int nw, int start, int end, std::vector<int> * partialResults, int position){
-    
     for(int i=start; i<=end; i++){
         if(isPrime(i)){
             (* partialResults)[position]++;
@@ -56,21 +54,24 @@ void reducer(int nw){
         std::vector<std::thread> threads(nw);
         std::vector<int> partialResult(nw);
 
-        int binLen = (extracted / nw);
-        
-        for(int i=0;i<nw;i++){
-            
-            if(i == nw - 1){
+        int binLen = ceil( (float) extracted / (float) nw );
 
-                threads[i] = std::thread(computePrime, nw, (binLen * i) +1, binLen * (i + 1), &partialResult, i);
-            }
-            else{
-
-                threads[i] = std::thread(computePrime, nw, (binLen * i) + 1, binLen * (i + 1), &partialResult, i);
-            }
+        int numBin = 0;
+        int start = (binLen * numBin) + 1;
+        int end = binLen * (numBin + 1);
         
+        while(start <= extracted){
+                std::cout << "start" << start << "end" << end << std::endl;
+                threads[numBin] = std::thread(computePrime, nw, start, end, &partialResult, numBin);
+                numBin++;
+
+                if(binLen * (numBin + 1) <= extracted)
+                    end = binLen * (numBin + 1);
+                else 
+                    end = extracted;
+                start = (binLen * numBin) + 1;
         }
-        for (int i = 0; i < nw; i++){
+        for (int i = 0; i < numBin; i++){
             threads[i].join();
         }
         sum = 0;
@@ -78,6 +79,7 @@ void reducer(int nw){
             sum+=partialResult[i];
         }
         std::cout << sum << std::endl;
+        outputQueue.safe_push(sum);
     }
 }
 
