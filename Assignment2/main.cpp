@@ -6,11 +6,12 @@
 #define EOS -1
 
 SafeQueue<int> producerQueue;
+SafeQueue<int> outputQueue;
 
 void producer(int numTask){
     for(int i=0;i<numTask;i++){
-        //int tmp = rand()%10000+1;
-        int tmp = 22 ;
+        int tmp = rand()%10000+1;
+        //int tmp = 22 ;
         producerQueue.safe_push(tmp);
     }
 
@@ -78,6 +79,7 @@ void reducer(int nw){
             sum+=partialResult[i];
         }
         std::cout << sum << std::endl;
+        outputQueue.safe_push(sum);
     }
 }
 
