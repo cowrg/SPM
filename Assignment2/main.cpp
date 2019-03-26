@@ -61,7 +61,7 @@ void reducer(int nw){
         int end = binLen * (numBin + 1);
         
         while(start <= extracted){
-                std::cout << "start" << start << "end" << end << std::endl;
+                //std::cout << "start" << start << "end" << end << std::endl;
                 threads[numBin] = std::thread(computePrime, nw, start, end, &partialResult, numBin);
                 numBin++;
 
@@ -78,7 +78,7 @@ void reducer(int nw){
         for (int i = 0; i < nw; i++){
             sum+=partialResult[i];
         }
-        std::cout << sum << std::endl;
+        //std::cout << sum << std::endl;
         outputQueue.safe_push(sum);
     }
 }

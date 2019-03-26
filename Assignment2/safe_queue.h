@@ -1,7 +1,9 @@
 #include <limits>
-#include<queue>
+#include <queue>
 #include <iostream>
 #include <unistd.h>
+#include <mutex>
+#include <condition_variable>
 
 template <class T> class SafeQueue{ 
     private:
