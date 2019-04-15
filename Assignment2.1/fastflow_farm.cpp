@@ -28,7 +28,7 @@ struct firstStage: ff_monode_t<int>{
     firstStage(const size_t length) : length(length){}
     int* svc(int *){
         for(size_t i = 1; i < length+1; ++i){
-            ff_send_out(new int(rand()%10000+1));
+            ff_send_out(new int(rand()%10000+2));
         }
         return EOS;
     }
