@@ -1,3 +1,4 @@
+//@Author Alessandro Berti, Eugenio Paluello
 #include <thread>
 #include <vector>
 #include <math.h>
