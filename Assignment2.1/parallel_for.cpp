@@ -35,18 +35,20 @@ int main(int argc, const char** argv){
 
     std::vector<int> tasks(n_tasks);
     for(int i = 0; i < n_tasks; i++)
-        tasks[i] = rand()%10000+2;
+        tasks[i] = i+2;
     
-    ParallelForReduce<long> pfr;
-    long sum = 0;
-    pfr.parallel_reduce(sum, 0, 0, n_tasks, 1, 0, [&tasks](const long i, long &mysum){
-            for(long k = 2; k <= tasks[i]; k++)
-                mysum += isPrime(k);
-        },
-        [](long &s, const long e){ s+= e;}
-    );
-
-    std::cout << sum << std::endl;
-
+    std::vector<int> res(n_tasks,0);
+    
+    ParallelFor pf(threads);
+    ffTime(START_TIME);
+    pf.parallel_for(0, n_tasks, 1, 0, [&tasks,&res](const int i){
+            for(int k = 2; k <= tasks[i]; k++)
+                res[i] += isPrime(k);
+        }
+    ,threads);
+    ffTime(STOP_TIME);
+    std::cout << "Time: " << ffTime(GET_TIME) << "\n";
+    //for(int i = 0; i < n_tasks; i++)
+    //	std::cout << res[i] << std::endl;
     return 0;
 }
