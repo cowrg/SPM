@@ -1,11 +1,9 @@
-#include <thread>
-#include <vector>
+#include <queue>
+#include <math.h>
 #include <math.h>
 #include <iostream>
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
-#include <ff/pipeline.hpp>
-
 
 using namespace ff;
 
@@ -24,71 +22,77 @@ int isPrime(int x){
     return 1;
 }
 
-struct firstStage: ff_monode_t<int>{
-    firstStage(const size_t length) : length(length){}
-    int* svc(int *){
-        for(size_t i = 1; i < length+1; ++i){
-            ff_send_out(new int(rand()%10000+2));
-        }
-        return EOS;
-    }
-    const size_t length;
+struct pair_t {
+	pair_t(const size_t task, const size_t res): task(task), res(res){}
+	size_t task;
+	size_t res;
 };
 
-struct secondStage: ff_node_t<int>{
-    int* svc(int* task){
-        auto &t = *task;
-        auto counter = 0;
-        for(auto i = t; i > 1; --i)
-            if(isPrime(i))
-                counter++;
-        t = counter;
-        return task;
-    }
-};
-
-struct thirdStage: ff_minode_t<int>{
-    int* svc(int* task){
-        auto &t = *task;
-        sum+=t;
-        delete task;
-        return GO_ON;
-    }
-
-    void svc_end(){ std::cout << "Prime numbers = " << sum << std::endl;}
-    int sum = 0;
+struct emitter: ff_node_t<size_t>{
+	emitter(const size_t n_tasks):n_tasks(n_tasks){}
+	size_t* svc(int*){
+		for(size_t i = 0; i < n_tasks; i++)
+			ff_send_out(new size_t(i));
+		return EOS;
+	}
+	const size_t n_tasks;
 };
 
 
-int main(int argc, const char** argv){
-    if(argc < 3){
-        std::cerr << "use: " << argv[0] << " task numbers\n";
-        return -1;
-    }
-    const size_t nworkers = atoi(argv[2]);
-    std::vector<std::unique_ptr<ff_node>> W;
-    for(size_t i = 0; i < nworkers; ++i)
-        W.push_back(make_unique<secondStage>());
+struct worker: ff_node_t<pair_t>{
+	pair_t svc(size_t* task){ //should be pair_t*
+		size_t &t = *task;
+		size_t sum = 0;
+		for(size_t i = 2; i < t; i++)
+			sum+=isPrime(i);
+		return pair_t(t, sum);
+	}
+};
 
-    firstStage first(atoi(argv[1]));
-    secondStage second;
-    thirdStage third;
+struct collector: ff_node_t<int>{
+	int* svc(pair_t* p){
+		res.push(*p);
+		return GO_ON;
+	}
+	void svc_end(){
+		pair_t val(0,0);
+		while(!res.empty()){
+			val = res.front();
+			res.pop();
+			std::cout << "task: " << val.task << "res: " << val.res << std::endl;
+		}
+		std::cout << "End\n";
+	}
+	std::queue<pair_t> res;
+};
 
-    ff_Farm<int> farm (std::move(W));
-    //Emitter e(farm.getlb());
-    //farm.add_emitter(e);
-    //farm.remove_collector();
 
-    ff_Pipe<int> pipe(first, farm ,third);
-    ffTime(START_TIME);
-    if(pipe.run_and_wait_end() < 0){
-        error("Running pipe");
-        return -1;
-    }
-    ffTime(STOP_TIME);
 
-    std::cout << "Time: " << ffTime(GET_TIME) << "\n";
-    pipe.ffStats(std::cout);
 
-    return 0;
+int main(int argc, char* argv[]){
+	if(argc < 3){
+		std::cerr << "use: " << argv[0] << "nworkers ntasks\n";
+		return -1;
+	}
+	const size_t nworkers = std::stol(argv[1]);
+	const size_t n_tasks = std::stol(argv[2]);
+
+	//Farm
+	//unique_ptr: la proprietà della risrsa viene trasferita a un altro unique_ptr e l'oggetto unique_ptr
+	//originale non ne è più il proprietario della risorsa
+	emitter e(n_tasks);
+	collector c;
+	std::vector<std::unique_ptr<ff_node>> W;
+	for(size_t i = 0; i < nworkers; i++)
+		W.push_back(make_unique<worker>());
+	ff_Farm<int> farm(std::move(W), e, c);
+
+	ffTime(START_TIME);
+	if(farm.run_and_wait_end()<0){
+		error("running farm");
+		return -1;
+	}
+	ffTime(STOP_TIME);
+	std::cout << "Time: " << ffTime(GET_TIME) << std::endl;
+	return 0;
 }
