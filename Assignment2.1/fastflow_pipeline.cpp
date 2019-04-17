@@ -61,7 +61,7 @@ struct thirdStage: ff_node_t<int>{
 
 int main(int argc, const char** argv){
     if(argc < 2){
-        std::cerr << "use: " << argv[0] << " task numbers\n";
+        std::cerr << "use: " << argv[0] << "n_tasks\n";
         return -1;
     }
 
@@ -75,7 +75,7 @@ int main(int argc, const char** argv){
         return -1;
     }
     std::cout << "Time: " << pipe.ffTime() << "\n";
-    pipe.ffStats(std::cout);
+    //pipe.ffStats(std::cout);
 
     return 0;
 }

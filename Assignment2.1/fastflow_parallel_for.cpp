@@ -27,11 +27,11 @@ int isPrime(int x){
 
 int main(int argc, const char** argv){
     if(argc < 3){
-        std::cerr << "use: " << argv[0] << " task numbers\n";
+        std::cerr << "use: " << argv[0] << " nworkers n_tasks\n";
         return -1;
     }
-    int n_tasks = atoi(argv[1]);
-    int threads = atoi(argv[2]);
+    int n_tasks = atoi(argv[2]);
+    int threads = atoi(argv[1]);
 
     std::vector<int> tasks(n_tasks);
     for(int i = 0; i < n_tasks; i++)
