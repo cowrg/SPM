@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
 
-#include "./utimer.hpp"
-
 #include "./CImg.h"                                                                                                                                                                                              
 using namespace std;
 using namespace cimg_library;

@@ -1,4 +1,4 @@
-//@Authors Alessandro Berti, Luca Corbucci, Eugenio Paluello
+//@Authors Alessandro Berti, Eugenio Paluello
 
 #include <iostream>
 #include <vector>
@@ -6,10 +6,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <math.h>
-
+#include <chrono>
 #include "./CImg.h"                                                                                                    
+
 using namespace std;
 using namespace cimg_library;
+using std::chrono::steady_clock;
 
 // notable constants and types 
 using board_t = cimg_library::CImg<unsigned char>;
@@ -21,7 +23,11 @@ int counter = 0;
 std::mutex d_mutex;
 std::condition_variable s_condition;        //rectangle 
 std::condition_variable b_condition;        //board	
- 
+
+//times variable
+auto fitness_update_time = steady_clock::duration::zero();
+auto display_time = steady_clock::duration::zero();
+
 
 struct rectangle{int x1, y1, x2, y2;};
 
@@ -45,7 +51,7 @@ void pattern(board_t* board, int n){
 	for(int i=0; i<n; i++)
 		for(int j=0; j<n; j++){
 			if(j > n/2-10 && j < n/2+10)
-				(*board)(i,j,0,0) = alive;//old_board(i,j,0,0) = (rand() % 32 == 0 ? alive : dead);
+				(*board)(i,j,0,0) = alive;
 			if(i > n/2-10 && i < n/2+10)
 				(*board)(i,j,0,0) = alive;
 		}
@@ -74,11 +80,13 @@ int count_neighbors(int i, int j, int n, board_t* board){
 void update_rectangle(board_t *new_board, board_t* old_board, rectangle rect, int N, int n){
 	int iter = 0;
 	while(iter < N){
+		auto start = chrono::high_resolution_clock::now();
 		for(int i = rect.x1; i <= rect.x2; i++)
 			for(int j = rect.y1; j <= rect.y2; j++)
 					(*new_board)(i, j, 0, 0) = rules(count_neighbors(i, j, n, old_board), (*old_board)(i, j, 0, 0));
 		iter++;
 		std::unique_lock<std::mutex> lock(d_mutex);
+		fitness_update_time += chrono::high_resolution_clock::now() - start;
 		counter++;
 		b_condition.notify_one();
 		s_condition.wait(lock);
@@ -92,10 +100,12 @@ void render(board_t *new_board, board_t* old_board, CImgDisplay* main_displ, int
 	while(iter < N){
 		std::unique_lock<std::mutex> lock(d_mutex);
 		b_condition.wait(lock, [=]{return counter == nw;});
+		auto start = chrono::high_resolution_clock::now();
 		(*main_displ).display(*new_board);
 		temp = *old_board;
 		*old_board = *new_board;
 		*new_board = temp;
+		display_time += chrono::high_resolution_clock::now() - start;
 		counter = 0;
 		s_condition.notify_all();
 		iter++;
@@ -109,9 +119,6 @@ void board_partitions(std::vector<rectangle>* rectangles, int n, int nw){
 	int per_rows = n/x_size;
 	int r = (n-x_size*per_rows)/per_rows;
 	int rr = (n-x_size*per_rows)-(r*per_rows); 
-//	std::cout << "x_size: " << x_size << std::endl;
-//	std::cout << "y_size: " << y_size << std::endl;
-//	std::cout << "How many per row: " << per_rows << std::endl;
 	int x1=0, y1=0, x2=x_size-1+r+rr, y2=y_size-1;
 	int count_row = 1;
 	for(int wid = 0; wid < nw; wid++){	
@@ -147,22 +154,21 @@ int main(int argc, char * argv[]) {
 	// create empty boards
 	board_t old_board(n,n,1,1,0);
 	board_t new_board(n,n,1,1,0);
-
+	
 	//vector of threads
 	std::vector<std::thread> threads(nw);
 
 	//vector of rectangles 
-	std::vector<rectangle> rectangles(nw); 
-	board_partitions(&rectangles, n, nw);
+	std::vector<rectangle> rectangles(nw);
 
-//	for(int i = 0; i < rectangles.size(); i++)
-//		std::cout << rectangles[i].x1 << "," << rectangles[i].y1 << "||" << rectangles[i].x2 << "," << rectangles[i].y2 << std::endl;
+	//Assign a certain area to each thread 
+	board_partitions(&rectangles, n, nw);
 
 	//Initialization
 	random_init ? random(&old_board, n) : pattern(&old_board, n); 
-
 	CImgDisplay main_displ(old_board,"Game of Life");
 
+	auto start = chrono::high_resolution_clock::now();
 	std::thread renderer = std::thread(render, &new_board, &old_board, &main_displ, N, nw); 
 	for(int i = 0; i < nw; i++)
 		threads[i] = std::thread(update_rectangle, &new_board, &old_board, rectangles[i], N, n);
@@ -170,6 +176,11 @@ int main(int argc, char * argv[]) {
 	for(int i = 0; i < nw; i++)
 		threads[i].join();
 	renderer.join();
+	auto elapsed = chrono::high_resolution_clock::now() - start;
+
+	cout << "Per Thread Average Fitness_Update Time: "<< chrono::duration_cast<chrono::microseconds>(fitness_update_time).count()/n/N << " usec" << endl;
+	cout << "Average Display Time: "<< chrono::duration_cast<chrono::microseconds>(display_time).count()/N << " usec" << endl;
+	cout << "Whole Time: "<< chrono::duration_cast<chrono::microseconds>(elapsed).count() << " usec" << endl;
 
 	return(0);
 }
