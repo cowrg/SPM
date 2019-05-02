@@ -1,4 +1,4 @@
-//@Authors Alessandro Berti, Eugenio Paluello
+//@Authors Alessandro Berti, Luca Corbucci, Eugenio Paluello
 
 #include <iostream>
 #include <vector>
