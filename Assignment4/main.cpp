@@ -19,7 +19,9 @@ std::pair<T,long> reduce(std::pair<T, long> x, std::pair<T, long> y){
 std::vector<int> generator(int size){
 	std::vector<int> v(size);
 	for(auto i = 0; i < size; i++)
-		v[i] = i;
+		v[i] = i%2;
+	for(auto i : v)
+		std::cout << i << std::endl;
 	return v;
 }
 /////////////////////////////////////////////
@@ -32,9 +34,13 @@ int main(int argc, char**argv){
 	}
 	nw = atoi(argv[1]);
 	size = atoi(argv[2]);
-	std::function<std::pair<int, long> (int)> map_function = map<int>;
-	std::function<std::pair<int, long> (std::pair<int, long>, std::pair<int, long>)> reduce_function = reduce<int>;
-	GoogleMapReduce<int> gmr(nw, generator(size), map_function, reduce_function); 
+//	std::function<std::pair<int, long> (int)> map_function = map<int>;
+//	std::function<std::pair<int, long> (std::pair<int, long>, std::pair<int, long>)> reduce_function = reduce<int>;
+//	GoogleMapReduce<int> gmr(nw, generator(size), map_function, reduce_function); 
+	std::function<std::pair<std::string, long> (std::string)> map_function = map<std::string>;
+	std::function<std::pair<std::string, long> (std::pair<std::string, long>, std::pair<std::string, long>)> reduce_function = reduce<std::string>;
+	std::vector<std::string> vector = {"ciao", "come", "butta", "la", "la", "vita", "ciao", "ciao"};
+	GoogleMapReduce<std::string> gmr(nw, vector, map_function, reduce_function); 
 	gmr.run();
 	return 0;
 }
