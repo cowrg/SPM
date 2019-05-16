@@ -41,6 +41,8 @@ int main(int argc, char**argv){
 	std::function<std::pair<std::string, long> (std::pair<std::string, long>, std::pair<std::string, long>)> reduce_function = reduce<std::string>;
 	std::vector<std::string> vector = {"ciao", "come", "butta", "la", "la", "vita", "ciao", "ciao"};
 	GoogleMapReduce<std::string> gmr(nw, vector, map_function, reduce_function); 
-	gmr.run();
+	std::vector<std::pair<std::string, long>> out = gmr.run();
+	for(auto &item : out)
+		std::cout << "Key: " << item.first << "--- Value: " << item.second << std::endl;
 	return 0;
 }
