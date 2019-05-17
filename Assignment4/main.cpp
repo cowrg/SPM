@@ -53,30 +53,32 @@ int main(int argc, char**argv){
 	std::vector<std::pair<std::string, long>> string_out;
 	std::vector<std::pair<int, long>> int_out;
 	if(argc < 2){
-		std::cout << "Usage: " << argv[0] << " nw size" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " nw size" << std::endl;
 		return 1;
 	}
 	nw = atoi(argv[1]);
 	size = atoi(argv[2]);
+
+	//Integer vector
 	std::function<std::pair<int, long> (int)> map_function = map<int>;
 	std::function<std::pair<int, long> (std::pair<int, long>, std::pair<int, long>)> reduce_function = reduce<int>;
-	std::cout << "------------" << std::endl;
+	std::cout << "------------ Start passing by copy input vector to GoogleMapReduce object" << std::endl;
 	GoogleMapReduce<int> gmr(nw, int_generator(size), map_function, reduce_function); 
-	std::cout << "------------" << std::endl;
-	int_out = gmr.run();
-	
+	std::cout << "------------ End passing by copy input vector to GoogleMapReduce object" << std::endl;
+	int_out = gmr.run();	
 	for(auto &item : int_out)
 		std::cout << "Key: " << item.first << "--- Value: " << item.second << std::endl;
 	
-	
+	//String vector	
 //	std::function<std::pair<std::string, long> (std::string)> map_function = map<std::string>;
 //	std::function<std::pair<std::string, long> (std::pair<std::string, long>, std::pair<std::string, long>)> reduce_function = reduce<std::string>;
-	//std::vector<std::string> vector = {"ciao", "come", "butta", "la", "la", "vita", "ciao", "ciao"};
+//	std::cout << "------------ Start passing by copy input vector to GoogleMapReduce object" << std::endl;
 //	GoogleMapReduce<std::string> gmr(nw, string_generator(size), map_function, reduce_function); 
+//	std::cout << "------------ End passing by copy input vector to GoogleMapReduce object" << std::endl;
 //	string_out = gmr.run();
-
 //	
 //	for(auto &item : string_out)
 //		std::cout << "Key: " << item.first << "--- Value: " << item.second << std::endl;
-//	return 0;
+//
+	return 0;
 }
