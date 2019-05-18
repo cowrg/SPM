@@ -1,7 +1,7 @@
 //Authors Alessandro Berti, Eugenio, Paluello
 
 #include <stdlib.h>
-#include "./google_map_reduce.h"
+#include "./pthread_google_map_reduce.h"
 /////////////////////////////////////////////////////////////////////
 template<typename T>
 std::pair<T,long> map(T item){
