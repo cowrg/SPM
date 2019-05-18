@@ -3,9 +3,9 @@ CC = g++
 
 all:	
 	$(CC) main.cpp $(CFLAGS) -o pthread_google_map_reduce 
-	@echo "----> Ex. "$(PROGRAM_NAME)"4 10000 1" 
+	@echo "----> Ex. ./pthread_google_map_reduce 4 10000 1" 
 	$(CC) fastflow_google_map_reduce.cpp $(CFLAGS) -DTRACE_FASTFLOW -o fastflow_google_map_reduce 
-	@echo "----> Ex. "$(PROGRAM_NAME)"4 4 10000 1" 
+	@echo "----> Ex. ./fastflow_google_map_reduce 4 4 10000 1" 
 
 clean: 
 	rm -f pthread_google_map_reduce
