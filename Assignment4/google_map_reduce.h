@@ -106,7 +106,7 @@ template<class T> class GoogleMapReduce{
 		}
 
 
-		std::vector<std::pair<T,long>> run(){ //-----------------------------esco il puntatore?
+		std::vector<std::pair<T,long>> run(){ 
 			long chunk = ceil(this->input_size/this->nw); 
 			long counter = 0, start = 0, end = 0;
 			while(counter < this->nw){

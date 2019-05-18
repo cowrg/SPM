@@ -1,13 +1,13 @@
-OBJECTS = main.cpp
 CFLAGS = -pthread -std=c++17 -O3 
 CC = g++
-PROGRAM_NAME = main 
 
-$(PROGRAM_NAME):$(OBJECTS)
-	$(CC) $(OBJECTS) $(CFLAGS) -o $(PROGRAM_NAME)
-	@echo "----> Ex. "$(PROGRAM_NAME)"4 10000" 
+all:	
+	$(CC) main.cpp $(CFLAGS) -o pthread_google_map_reduce 
+	@echo "----> Ex. "$(PROGRAM_NAME)"4 10000 1" 
+	$(CC) fastflow_google_map_reduce.cpp $(CFLAGS) -DTRACE_FASTFLOW -o fastflow_google_map_reduce 
+	@echo "----> Ex. "$(PROGRAM_NAME)"4 4 10000 1" 
 
 clean: 
-	rm -f $(PROGRAM_NAME)
-	rm -f $(TESTNAME)
+	rm -f pthread_google_map_reduce
+	rm -f fastflow_google_map_reduce
 	@echo "Clean done"
